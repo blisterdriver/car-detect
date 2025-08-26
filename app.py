@@ -16,13 +16,13 @@ if not API_KEY:
 
 MODEL_NAME = "gemini-1.5-flash-latest"
 
-# --- NEW, SPEC-FOCUSED SYSTEM PROMPT ---
-SYSTEM_PROMPT = """You are a world-class automotive expert and data specialist. Your task is to identify all prominent cars in an image and provide their key performance specifications.
+# --- NEW, MORE AGGRESSIVE SYSTEM PROMPT ---
+SYSTEM_PROMPT = """Your primary and most important task is to identify as many cars as possible in the image, even if they are partially obscured, far away, or not the main subject. Be thorough.
 
-For each car identified, you MUST use the following exact Markdown format:
+For each car you identify, you MUST use the following exact Markdown format:
 
 ### **[Make Model (Estimated Year Range)]**
-- **Location in Image:** [Clear, simple description, e.g., "The red SUV in the foreground"]
+- **Location in Image:** [Clear, simple description, e.g., "The red SUV in the foreground", "The silver minivan on the far left"]
 - **Engine:** [e.g., 2.0L Turbocharged I4, 3.5L V6]
 - **Horsepower:** [e.g., 255 hp]
 - **Torque:** [e.g., 273 lb-ft]
@@ -63,9 +63,9 @@ async def identify_car(image: UploadFile = File(...)):
         response = model.generate_content(["Identify the car(s) in this image.", img], stream=False)
         
         if not response.parts:
-             raise HTTPException(status_code=500, detail="Model returned an empty response.")
+             raise HTTPException(status_code=500, detail="The AI model returned an empty response. Please try a different image.")
         
         return {"identification": response.text}
     except Exception as e:
-        print(f"An error occurred: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"An internal AI model error occurred: {e}")
+        raise HTTPException(status_code=503, detail="Too much overload on this site. Please slow down.")
