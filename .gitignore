@@ -1,0 +1,33 @@
+# --- Environment Variables ---
+# Never commit your API keys or other secrets!
+.env
+
+# --- Python ---
+# Virtual environment folders
+venv/
+.venv/
+env/
+.env/
+*/venv/
+*/.venv/
+*/env/
+*/.env/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- IDE / Editor specific ---
+# Visual Studio Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# --- Operating System specific ---
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db

@@ -1,0 +1,316 @@
+<!-- index.html (Updated) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarSpotter AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00aaff;
+            --background-color: #101010;
+            --surface-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --text-secondary-color: #999;
+            --border-color: #333;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 650px;
+            background-color: var(--surface-color);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        header {
+            padding: 20px 30px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        header h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8em;
+            letter-spacing: 1px;
+        }
+
+        main {
+            padding: 30px;
+        }
+
+        #upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+            margin-bottom: 25px;
+        }
+
+        #upload-area:hover, #upload-area.dragover {
+            background-color: rgba(0, 170, 255, 0.05);
+            border-color: var(--primary-color);
+        }
+
+        #upload-area p {
+            margin: 0;
+            font-size: 1.1em;
+            color: var(--text-secondary-color);
+        }
+
+        #upload-area p strong {
+            color: var(--primary-color);
+        }
+        
+        #file-input {
+            display: none;
+        }
+
+        #image-preview {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: none;
+            margin-bottom: 25px;
+        }
+        
+        /* --- Results Area --- */
+        #result-wrapper {
+            position: relative;
+            background-color: var(--background-color);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        #result-container {
+            text-align: left;
+        }
+        
+        /* This is the key part for the larger car name heading */
+        #result-container strong:first-of-type {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        #result-container p {
+            line-height: 1.7;
+            font-size: 1.05em;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        #copy-button {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary-color);
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        #copy-button:hover {
+            background-color: #2a2a2a;
+            color: var(--text-color);
+        }
+
+        #copy-button svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        #copy-button .copy-text {
+            font-size: 0.9em;
+        }
+
+        .loader {
+            border: 4px solid var(--surface-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* --- Mobile & Tablet Responsiveness --- */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                align-items: flex-start;
+            }
+            #app-container {
+                width: 100%;
+                border: none;
+                border-radius: 0;
+            }
+            main {
+                padding: 20px;
+            }
+            #upload-area {
+                padding: 30px 15px;
+            }
+            #result-container strong:first-of-type {
+                font-size: 1.6em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <header>
+            <h1>CarSpotter AI</h1>
+        </header>
+        <main>
+            <input type="file" id="file-input" accept="image/*">
+            <label for="file-input" id="upload-area">
+                <p><strong>Click to browse</strong> or drag & drop an image</p>
+            </label>
+            
+            <img id="image-preview" src="#" alt="Image Preview"/>
+
+            <div id="loader" class="loader hidden"></div>
+
+            <div id="result-wrapper" class="hidden">
+                <button id="copy-button" title="Copy to clipboard">
+                    <!-- SVG Icon for copy -->
+                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span id="copy-text" class="hidden" style="margin-left: 5px;">Copied!</span>
+                </button>
+                <div id="result-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const loader = document.getElementById('loader');
+        const resultWrapper = document.getElementById('result-wrapper');
+        const resultContainer = document.getElementById('result-container');
+        const copyButton = document.getElementById('copy-button');
+        const copyIcon = document.getElementById('copy-icon');
+        const copyText = document.getElementById('copy-text');
+
+        const handleDragDrop = (event) => {
+            const file = event.dataTransfer?.files[0];
+            if (file) handleFile(file);
+        };
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files[0]) handleFile(event.target.files[0]);
+        });
+
+        // Drag and drop events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+        });
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+        });
+        uploadArea.addEventListener('drop', handleDragDrop, false);
+
+        copyButton.addEventListener('click', () => {
+            navigator.clipboard.writeText(resultContainer.innerText).then(() => {
+                copyIcon.classList.add('hidden');
+                copyText.classList.remove('hidden');
+                setTimeout(() => {
+                    copyIcon.classList.remove('hidden');
+                    copyText.classList.add('hidden');
+                }, 1500);
+            }).catch(err => console.error('Failed to copy text: ', err));
+        });
+
+        async function handleFile(file) {
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.style.display = 'block';
+
+            loader.classList.remove('hidden');
+            resultWrapper.classList.add('hidden');
+            resultContainer.innerHTML = '';
+
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                const response = await fetch('/identify-car', { method: 'POST', body: formData });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                resultContainer.innerHTML = marked.parse(data.identification);
+                resultWrapper.classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultContainer.innerHTML = `<p style="color: #ff5555;"><strong>Error:</strong> ${error.message}</p>`;
+                resultWrapper.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+    </script>
+
+</body>
+</html>
