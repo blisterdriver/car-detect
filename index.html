@@ -1,4 +1,3 @@
-<!-- index.html (Updated & Fixed) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,313 +7,228 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #00aaff;
-            --background-color: #101010;
-            --surface-color: #1a1a1a;
-            --text-color: #e0e0e0;
-            --text-secondary-color: #999;
+            --primary-color: #00bfff;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --text-secondary-color: #a0a0a0;
             --border-color: #333;
+            --error-color: #ff5555;
+            --glow-color: rgba(0, 191, 255, 0.4);
         }
-
-        *, *::before, *::after {
-            box-sizing: border-box;
-        }
-
+        *, *::before, *::after { box-sizing: border-box; }
+        *:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--background-color);
             color: var(--text-color);
             margin: 0;
-            padding: 20px;
+            padding: 30px 20px;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
         }
-
-        #app-container {
-            width: 100%;
-            max-width: 650px;
-            background-color: var(--surface-color);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        header {
-            padding: 20px 30px;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-        }
-
+        #app-container { width: 100%; max-width: 750px; animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-15px); } to { opacity: 1; transform: translateY(0); } }
+        header { text-align: center; margin-bottom: 30px; }
         header h1 {
             font-family: 'Orbitron', sans-serif;
-            color: var(--primary-color);
-            margin: 0;
-            font-size: 1.8em;
-            letter-spacing: 1px;
-        }
-
-        main {
-            padding: 30px;
-        }
-
-        #upload-area {
-            border: 2px dashed var(--border-color);
-            border-radius: 12px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.3s, border-color 0.3s;
-            margin-bottom: 25px;
-        }
-
-        #upload-area:hover, #upload-area.dragover {
-            background-color: rgba(0, 170, 255, 0.05);
-            border-color: var(--primary-color);
-        }
-        
-        /* --- FIX 1: Remove the blue outline on focus --- */
-        #upload-area:focus, #copy-button:focus {
-            outline: none;
-        }
-
-        #upload-area p {
-            margin: 0;
-            font-size: 1.1em;
-            color: var(--text-secondary-color);
-        }
-
-        #upload-area p strong {
-            color: var(--primary-color);
-        }
-        
-        #file-input {
-            display: none;
-        }
-
-        #image-preview {
-            width: 100%;
-            height: auto;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            display: none;
-            margin-bottom: 25px;
-        }
-        
-        #result-wrapper {
-            position: relative;
-            background-color: var(--background-color);
-            padding: 25px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-
-        #result-container {
-            text-align: left;
-        }
-        
-        #result-container strong:first-of-type {
-            display: block;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2em;
-            font-weight: 700;
-            line-height: 1.2;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-        
-        #result-container p {
-            line-height: 1.7;
-            font-size: 1.05em;
-            margin: 0;
             color: var(--text-color);
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 0 0 15px var(--glow-color);
         }
-
-        #copy-button {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+        #upload-container {
             background: var(--surface-color);
             border: 1px solid var(--border-color);
-            color: var(--text-secondary-color);
-            border-radius: 8px;
-            padding: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s, color 0.2s;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
         }
-
-        #copy-button:hover {
-            background-color: #2a2a2a;
+        #upload-container:hover, #upload-container.dragover { border-color: var(--primary-color); background-color: #2a2a2a; }
+        #upload-label { cursor: pointer; }
+        #upload-label svg { width: 50px; height: 50px; color: var(--primary-color); margin-bottom: 15px; }
+        #upload-label p { margin: 0; font-size: 1.1em; color: var(--text-secondary-color); }
+        #upload-label p strong { color: var(--primary-color); font-weight: 700; }
+        #file-input { display: none; }
+        #results-area { display: grid; gap: 30px; }
+        #image-preview-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+        .car-card { background-color: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; }
+        .car-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1.6em; color: var(--primary-color); margin: 0 0 15px 0; }
+        .car-card ul { list-style: disc; padding-left: 20px; margin: 0; }
+        .car-card li { line-height: 1.7; margin-bottom: 5px; }
+        #reset-button-container { margin-top: 10px; }
+        #reset-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
             color: var(--text-color);
+            background-color: var(--primary-color);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
         }
-
-        #copy-button svg {
-            width: 18px;
-            height: 18px;
-        }
-        
-        #copy-button .copy-text {
-            font-size: 0.9em;
-        }
-
+        #reset-button:hover { background-color: #0099cc; }
         .loader {
-            border: 4px solid var(--surface-color);
+            border: 4px solid var(--border-color);
             border-top: 4px solid var(--primary-color);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             animation: spin 1s linear infinite;
-            margin: 30px auto;
+            margin: 50px auto;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .hidden { display: none; }
+        @keyframes flash { 0% { box-shadow: 0 0 15px var(--glow-color); } 100% { box-shadow: none; } }
+        .pasting { animation: flash 0.5s ease-out; }
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                align-items: flex-start;
-            }
-            #app-container {
-                width: 100%;
-                border: none;
-                border-radius: 0;
-            }
-            main {
-                padding: 20px;
-            }
-            #upload-area {
-                padding: 30px 15px;
-            }
-            #result-container strong:first-of-type {
-                font-size: 1.6em;
-            }
+            body { padding: 20px 15px; }
+            header h1 { font-size: 2em; }
+            .car-card h3 { font-size: 1.4em; }
         }
-
     </style>
 </head>
 <body>
-
     <div id="app-container">
-        <header>
-            <h1>CarSpotter AI</h1>
-        </header>
+        <header><h1>CarSpotter AI</h1></header>
         <main>
-            <input type="file" id="file-input" accept="image/*">
-            <!-- The 'label' tag correctly handles opening the file input. No extra JS click is needed. -->
-            <label for="file-input" id="upload-area">
-                <p><strong>Click to browse</strong> or drag & drop an image</p>
-            </label>
-            
-            <img id="image-preview" src="#" alt="Image Preview"/>
-
-            <div id="loader" class="loader hidden"></div>
-
-            <div id="result-wrapper" class="hidden">
-                <button id="copy-button" title="Copy to clipboard">
-                    <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                    <span id="copy-text" class="hidden" style="margin-left: 5px;">Copied!</span>
-                </button>
-                <div id="result-container"></div>
+            <div id="upload-container">
+                <input type="file" id="file-input" accept="image/*">
+                <label for="file-input" id="upload-label">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <p><strong>Click to upload</strong>, drag & drop, or paste an image</p>
+                </label>
+            </div>
+            <div id="loader" class="loader"></div>
+            <div id="results-area">
+                <div id="image-preview-container"></div>
+                <div id="results-container"></div>
+                <div id="reset-button-container">
+                    <button id="reset-button">Start Over</button>
+                </div>
             </div>
         </main>
     </div>
+<script>
+    const uploadContainer = document.getElementById('upload-container');
+    const fileInput = document.getElementById('file-input');
+    const loader = document.getElementById('loader');
+    const resultsArea = document.getElementById('results-area');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const resultsContainer = document.getElementById('results-container');
+    const resetButton = document.getElementById('reset-button');
 
-    <script>
-        const uploadArea = document.getElementById('upload-area');
-        const fileInput = document.getElementById('file-input');
-        const imagePreview = document.getElementById('image-preview');
-        const loader = document.getElementById('loader');
-        const resultWrapper = document.getElementById('result-wrapper');
-        const resultContainer = document.getElementById('result-container');
-        const copyButton = document.getElementById('copy-button');
-        const copyIcon = document.getElementById('copy-icon');
-        const copyText = document.getElementById('copy-text');
+    // --- FIX: A dedicated, robust reset function ---
+    function resetUI() {
+        setUIState('uploading');
+        // Clear the content from the previous run
+        imagePreviewContainer.innerHTML = '';
+        resultsContainer.innerHTML = '';
+        // CRITICAL: Clear the file input's value to allow re-uploading the same file
+        fileInput.value = null;
+    }
 
-        // --- FIX 2: Removed the redundant click listener on 'uploadArea' ---
-        // The <label> element handles this natively. This fixes the double-open bug.
-        
-        fileInput.addEventListener('change', (event) => {
-            if (event.target.files[0]) handleFile(event.target.files[0]);
-        });
-        
-        const handleDragDrop = (event) => {
-            const file = event.dataTransfer?.files[0];
-            if (file) handleFile(file);
-        };
+    function setUIState(state) {
+        uploadContainer.classList.add('hidden');
+        loader.classList.add('hidden');
+        resultsArea.classList.add('hidden');
 
-        // Drag and drop events
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            }, false);
-        });
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
-        });
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
-        });
-        uploadArea.addEventListener('drop', handleDragDrop, false);
-
-        copyButton.addEventListener('click', () => {
-            navigator.clipboard.writeText(resultContainer.innerText).then(() => {
-                copyIcon.classList.add('hidden');
-                copyText.classList.remove('hidden');
-                setTimeout(() => {
-                    copyIcon.classList.remove('hidden');
-                    copyText.classList.add('hidden');
-                }, 1500);
-            }).catch(err => console.error('Failed to copy text: ', err));
-        });
-
-        async function handleFile(file) {
-            imagePreview.src = URL.createObjectURL(file);
-            imagePreview.style.display = 'block';
-
+        if (state === 'uploading') {
+            uploadContainer.classList.remove('hidden');
+        } else if (state === 'loading') {
             loader.classList.remove('hidden');
-            resultWrapper.classList.add('hidden');
-            resultContainer.innerHTML = '';
-
-            const formData = new FormData();
-            formData.append('image', file);
-            
-            try {
-                const response = await fetch('/identify-car', { method: 'POST', body: formData });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                
-                resultContainer.innerHTML = marked.parse(data.identification);
-                resultWrapper.classList.remove('hidden');
-
-            } catch (error) {
-                console.error('Error:', error);
-                resultContainer.innerHTML = `<p style="color: #ff5555;"><strong>Error:</strong> ${error.message}</p>`;
-                resultWrapper.classList.remove('hidden');
-            } finally {
-                loader.classList.add('hidden');
-            }
+        } else if (state === 'results') {
+            resultsArea.classList.remove('hidden');
         }
-    </script>
+    }
 
+    // --- Event Listeners ---
+    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+    // FIX: The button now calls the new resetUI function
+    resetButton.addEventListener('click', resetUI);
+    window.addEventListener('paste', handlePaste);
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+        document.body.addEventListener(eName, e => { e.preventDefault(); e.stopPropagation(); });
+        if (eName === 'dragenter' || eName === 'dragover') {
+            uploadContainer.addEventListener(eName, () => uploadContainer.classList.add('dragover'));
+        } else {
+            uploadContainer.addEventListener(eName, () => uploadContainer.classList.remove('dragover'));
+        }
+    });
+    uploadContainer.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+    
+    function handlePaste(event) {
+        const file = event.clipboardData?.files[0];
+        if (file && file.type.includes('image')) {
+            uploadContainer.classList.add('pasting');
+            setTimeout(() => uploadContainer.classList.remove('pasting'), 500);
+            handleFile(file);
+        }
+    }
+
+    async function handleFile(file) {
+        if (!file) return;
+
+        setUIState('loading');
+        
+        imagePreviewContainer.innerHTML = ''; 
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = "Uploaded Car Image Preview";
+        imagePreviewContainer.appendChild(img);
+        
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        try {
+            const response = await fetch('/identify-car', { method: 'POST', body: formData });
+            if (!response.ok) throw new Error((await response.json()).detail || 'Server error');
+            const data = await response.json();
+            
+            const parsedHTML = marked.parse(data.identification);
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = parsedHTML;
+            
+            let cardHTML = '';
+            const elements = Array.from(tempDiv.children);
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i].tagName === 'H3') {
+                    let content = elements[i].outerHTML;
+                    if (i + 1 < elements.length && elements[i + 1].tagName === 'UL') {
+                        content += elements[i + 1].outerHTML;
+                        i++;
+                    }
+                    cardHTML += `<div class="car-card">${content}</div>`;
+                }
+            }
+            resultsContainer.innerHTML = cardHTML;
+
+        } catch (error) {
+            resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Identification Failed</h3><p>${error.message}</p></div>`;
+            console.error('CarSpotter AI Error:', error);
+        } finally {
+            setUIState('results');
+        }
+    }
+
+    // Set the initial state when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        setUIState('uploading');
+    });
+</script>
 </body>
 </html>
