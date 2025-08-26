@@ -57,7 +57,9 @@
         #upload-label p { margin: 0; font-size: 1.1em; color: var(--text-secondary-color); }
         #upload-label p strong { color: var(--primary-color); font-weight: 700; }
         #file-input { display: none; }
-        #results-area { display: grid; gap: 30px; }
+        
+        /* --- Results appear below the upload box --- */
+        #results-area { display: grid; gap: 30px; margin-top: 30px; }
         #image-preview-container img {
             width: 100%;
             height: auto;
@@ -68,20 +70,7 @@
         .car-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1.6em; color: var(--primary-color); margin: 0 0 15px 0; }
         .car-card ul { list-style: disc; padding-left: 20px; margin: 0; }
         .car-card li { line-height: 1.7; margin-bottom: 5px; }
-        #reset-button-container { margin-top: 10px; }
-        #reset-button {
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1em;
-            font-weight: bold;
-            color: var(--text-color);
-            background-color: var(--primary-color);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        #reset-button:hover { background-color: #0099cc; }
+        
         .loader {
             border: 4px solid var(--border-color);
             border-top: 4px solid var(--primary-color);
@@ -95,6 +84,7 @@
         .hidden { display: none; }
         @keyframes flash { 0% { box-shadow: 0 0 15px var(--glow-color); } 100% { box-shadow: none; } }
         .pasting { animation: flash 0.5s ease-out; }
+
         @media (max-width: 768px) {
             body { padding: 20px 15px; }
             header h1 { font-size: 2em; }
@@ -113,122 +103,96 @@
                     <p><strong>Click to upload</strong>, drag & drop, or paste an image</p>
                 </label>
             </div>
-            <div id="loader" class="loader"></div>
-            <div id="results-area">
+            
+            <div id="loader" class="loader hidden"></div>
+
+            <div id="results-area" class="hidden">
                 <div id="image-preview-container"></div>
                 <div id="results-container"></div>
-                <div id="reset-button-container">
-                    <button id="reset-button">Start Over</button>
-                </div>
             </div>
         </main>
     </div>
-<script>
-    const uploadContainer = document.getElementById('upload-container');
-    const fileInput = document.getElementById('file-input');
-    const loader = document.getElementById('loader');
-    const resultsArea = document.getElementById('results-area');
-    const imagePreviewContainer = document.getElementById('image-preview-container');
-    const resultsContainer = document.getElementById('results-container');
-    const resetButton = document.getElementById('reset-button');
+    <script>
+        const uploadContainer = document.getElementById('upload-container');
+        const fileInput = document.getElementById('file-input');
+        const loader = document.getElementById('loader');
+        const resultsArea = document.getElementById('results-area');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const resultsContainer = document.getElementById('results-container');
 
-    // --- FIX: A dedicated, robust reset function ---
-    function resetUI() {
-        setUIState('uploading');
-        // Clear the content from the previous run
-        imagePreviewContainer.innerHTML = '';
-        resultsContainer.innerHTML = '';
-        // CRITICAL: Clear the file input's value to allow re-uploading the same file
-        fileInput.value = null;
-    }
-
-    function setUIState(state) {
-        uploadContainer.classList.add('hidden');
-        loader.classList.add('hidden');
-        resultsArea.classList.add('hidden');
-
-        if (state === 'uploading') {
-            uploadContainer.classList.remove('hidden');
-        } else if (state === 'loading') {
-            loader.classList.remove('hidden');
-        } else if (state === 'results') {
-            resultsArea.classList.remove('hidden');
-        }
-    }
-
-    // --- Event Listeners ---
-    fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-    // FIX: The button now calls the new resetUI function
-    resetButton.addEventListener('click', resetUI);
-    window.addEventListener('paste', handlePaste);
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
-        document.body.addEventListener(eName, e => { e.preventDefault(); e.stopPropagation(); });
-        if (eName === 'dragenter' || eName === 'dragover') {
-            uploadContainer.addEventListener(eName, () => uploadContainer.classList.add('dragover'));
-        } else {
-            uploadContainer.addEventListener(eName, () => uploadContainer.classList.remove('dragover'));
-        }
-    });
-    uploadContainer.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
-    
-    function handlePaste(event) {
-        const file = event.clipboardData?.files[0];
-        if (file && file.type.includes('image')) {
-            uploadContainer.classList.add('pasting');
-            setTimeout(() => uploadContainer.classList.remove('pasting'), 500);
-            handleFile(file);
-        }
-    }
-
-    async function handleFile(file) {
-        if (!file) return;
-
-        setUIState('loading');
-        
-        imagePreviewContainer.innerHTML = ''; 
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.alt = "Uploaded Car Image Preview";
-        imagePreviewContainer.appendChild(img);
-        
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        try {
-            const response = await fetch('/identify-car', { method: 'POST', body: formData });
-            if (!response.ok) throw new Error((await response.json()).detail || 'Server error');
-            const data = await response.json();
-            
-            const parsedHTML = marked.parse(data.identification);
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = parsedHTML;
-            
-            let cardHTML = '';
-            const elements = Array.from(tempDiv.children);
-            for (let i = 0; i < elements.length; i++) {
-                if (elements[i].tagName === 'H3') {
-                    let content = elements[i].outerHTML;
-                    if (i + 1 < elements.length && elements[i + 1].tagName === 'UL') {
-                        content += elements[i + 1].outerHTML;
-                        i++;
-                    }
-                    cardHTML += `<div class="car-card">${content}</div>`;
-                }
+        // --- Event Listeners ---
+        fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+        window.addEventListener('paste', handlePaste);
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eName => {
+            document.body.addEventListener(eName, e => { e.preventDefault(); e.stopPropagation(); });
+            if (eName === 'dragenter' || eName === 'dragover') {
+                uploadContainer.addEventListener(eName, () => uploadContainer.classList.add('dragover'));
+            } else {
+                uploadContainer.addEventListener(eName, () => uploadContainer.classList.remove('dragover'));
             }
-            resultsContainer.innerHTML = cardHTML;
-
-        } catch (error) {
-            resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Identification Failed</h3><p>${error.message}</p></div>`;
-            console.error('CarSpotter AI Error:', error);
-        } finally {
-            setUIState('results');
+        });
+        uploadContainer.addEventListener('drop', e => handleFile(e.dataTransfer.files[0]));
+        
+        function handlePaste(event) {
+            const file = event.clipboardData?.files[0];
+            if (file && file.type.includes('image')) {
+                uploadContainer.classList.add('pasting');
+                setTimeout(() => uploadContainer.classList.remove('pasting'), 500);
+                handleFile(file);
+            }
         }
-    }
 
-    // Set the initial state when the page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        setUIState('uploading');
-    });
-</script>
+        async function handleFile(file) {
+            if (!file) return;
+
+            // --- Simplified UI Flow ---
+            // 1. Hide previous results and show the loader
+            resultsArea.classList.add('hidden');
+            loader.classList.remove('hidden');
+            
+            // 2. Prepare the preview image and form data
+            imagePreviewContainer.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.alt = "Uploaded Car Image Preview";
+            imagePreviewContainer.appendChild(img);
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                // 3. Fetch results from the API
+                const response = await fetch('/identify-car', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error((await response.json()).detail || 'Server error');
+                const data = await response.json();
+                
+                const parsedHTML = marked.parse(data.identification);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = parsedHTML;
+                
+                let cardHTML = '';
+                const elements = Array.from(tempDiv.children);
+                for (let i = 0; i < elements.length; i++) {
+                    if (elements[i].tagName === 'H3') {
+                        let content = elements[i].outerHTML;
+                        if (i + 1 < elements.length && elements[i + 1].tagName === 'UL') {
+                            content += elements[i + 1].outerHTML;
+                            i++;
+                        }
+                        cardHTML += `<div class="car-card">${content}</div>`;
+                    }
+                }
+                resultsContainer.innerHTML = cardHTML;
+
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Identification Failed</h3><p>${error.message}</p></div>`;
+                console.error('CarSpotter AI Error:', error);
+            } finally {
+                // 4. Hide the loader and show the new results
+                loader.classList.add('hidden');
+                resultsArea.classList.remove('hidden');
+            }
+        }
+    </script>
 </body>
 </html>
