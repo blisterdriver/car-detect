@@ -1,4 +1,4 @@
-<!-- index.html (Updated) -->
+<!-- index.html (Updated & Fixed) -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,6 +78,11 @@
             background-color: rgba(0, 170, 255, 0.05);
             border-color: var(--primary-color);
         }
+        
+        /* --- FIX 1: Remove the blue outline on focus --- */
+        #upload-area:focus, #copy-button:focus {
+            outline: none;
+        }
 
         #upload-area p {
             margin: 0;
@@ -102,7 +107,6 @@
             margin-bottom: 25px;
         }
         
-        /* --- Results Area --- */
         #result-wrapper {
             position: relative;
             background-color: var(--background-color);
@@ -115,7 +119,6 @@
             text-align: left;
         }
         
-        /* This is the key part for the larger car name heading */
         #result-container strong:first-of-type {
             display: block;
             font-family: 'Orbitron', sans-serif;
@@ -182,7 +185,6 @@
             display: none;
         }
         
-        /* --- Mobile & Tablet Responsiveness --- */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -214,6 +216,7 @@
         </header>
         <main>
             <input type="file" id="file-input" accept="image/*">
+            <!-- The 'label' tag correctly handles opening the file input. No extra JS click is needed. -->
             <label for="file-input" id="upload-area">
                 <p><strong>Click to browse</strong> or drag & drop an image</p>
             </label>
@@ -224,7 +227,6 @@
 
             <div id="result-wrapper" class="hidden">
                 <button id="copy-button" title="Copy to clipboard">
-                    <!-- SVG Icon for copy -->
                     <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     <span id="copy-text" class="hidden" style="margin-left: 5px;">Copied!</span>
                 </button>
@@ -244,15 +246,17 @@
         const copyIcon = document.getElementById('copy-icon');
         const copyText = document.getElementById('copy-text');
 
+        // --- FIX 2: Removed the redundant click listener on 'uploadArea' ---
+        // The <label> element handles this natively. This fixes the double-open bug.
+        
+        fileInput.addEventListener('change', (event) => {
+            if (event.target.files[0]) handleFile(event.target.files[0]);
+        });
+        
         const handleDragDrop = (event) => {
             const file = event.dataTransfer?.files[0];
             if (file) handleFile(file);
         };
-        
-        uploadArea.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (event) => {
-            if (event.target.files[0]) handleFile(event.target.files[0]);
-        });
 
         // Drag and drop events
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
