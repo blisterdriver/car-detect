@@ -1,4 +1,4 @@
-# app.py (Updated with new prompt)
+# app.py
 import os
 import google.generativeai as genai
 from fastapi import FastAPI, File, UploadFile, HTTPException
@@ -14,18 +14,24 @@ API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
     raise ValueError("GOOGLE_API_KEY not found. Please set it in your .env file.")
 
-MODEL_NAME = "gemini-2.5-flash-lite"
+MODEL_NAME = "gemini-1.5-flash-latest"
 
-# --- NEW, HYPER-SPECIFIC SYSTEM PROMPT ---
-SYSTEM_PROMPT = """You are a world-class car specialist. Your task is to identify as many cars as possible in the provided image.
+# --- NEW, SPEC-FOCUSED SYSTEM PROMPT ---
+SYSTEM_PROMPT = """You are a world-class automotive expert and data specialist. Your task is to identify all prominent cars in an image and provide their key performance specifications.
 
-For each car you identify, you MUST follow this exact Markdown format:
+For each car identified, you MUST use the following exact Markdown format:
 
-### **[Unique Visual Identifier]**
-- **Identification:** [Make Model (Estimated Year Range)]
-- **Reasoning:** [Briefly explain the key visual cues like headlight shape, grille, body lines, or unique features that led to your identification.]
+### **[Make Model (Estimated Year Range)]**
+- **Location in Image:** [Clear, simple description, e.g., "The red SUV in the foreground"]
+- **Engine:** [e.g., 2.0L Turbocharged I4, 3.5L V6]
+- **Horsepower:** [e.g., 255 hp]
+- **Torque:** [e.g., 273 lb-ft]
+- **0-60 mph (0-100 km/h):** [e.g., ~5.9 seconds]
+- **Top Speed:** [e.g., ~130 mph / 210 km/h]
+- **Drivetrain:** [e.g., AWD, RWD, FWD]
+- **Fuel Economy (MPG):** [e.g., ~22 City / 29 Hwy]
 
-A "Unique Visual Identifier" MUST be a clear, simple description of the car's location or appearance in the image (e.g., "The red SUV in the foreground," "The black sedan in the middle lane," "The white minivan on the far left"). This is mandatory.
+Provide the most common or representative specs for the identified model generation. Do not include any other commentary or reasoning.
 """
 
 genai.configure(api_key=API_KEY)
