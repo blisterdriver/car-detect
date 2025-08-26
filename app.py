@@ -14,9 +14,8 @@ API_KEY = os.getenv("GOOGLE_API_KEY")
 if not API_KEY:
     raise ValueError("GOOGLE_API_KEY not found. Please set it in your .env file.")
 
-MODEL_NAME = "gemini-1.5-flash-latest"
+MODEL_NAME = "gemini-2.5-flash-lite"
 
-# --- NEW, MORE AGGRESSIVE SYSTEM PROMPT ---
 SYSTEM_PROMPT = """Your primary and most important task is to identify as many cars as possible in the image, even if they are partially obscured, far away, or not the main subject. Be thorough.
 
 For each car you identify, you MUST use the following exact Markdown format:
@@ -30,12 +29,23 @@ For each car you identify, you MUST use the following exact Markdown format:
 - **Top Speed:** [e.g., ~130 mph / 210 km/h]
 - **Drivetrain:** [e.g., AWD, RWD, FWD]
 - **Fuel Economy (MPG):** [e.g., ~22 City / 29 Hwy]
+- Country of origin. 
 
-Provide the most common or representative specs for the identified model generation. Do not include any other commentary or reasoning.
+CRITICAL FALLBACK RULE: If you cannot confidently identify a vehicle due to poor image quality (blurry, too distant, obscured), you MUST format the title as:
+`### **Unspecified Car (Reason for uncertainty)**`
+The reason must be concise, like `(Too Blurry)`, `(Partially Obscured)`, or `(Not Enough Confidence)`. Provide specs for unspecified cars be accurate as much as possible.
 """
 
+generation_config = {
+  "temperature": 0.5,
+}
+
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel(MODEL_NAME, system_instruction=SYSTEM_PROMPT)
+model = genai.GenerativeModel(
+    MODEL_NAME, 
+    system_instruction=SYSTEM_PROMPT,
+    generation_config=generation_config
+)
 
 app = FastAPI(title="CarSpotter AI API")
 
@@ -49,8 +59,15 @@ app.add_middleware(
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
-    with open("index.html", "r") as f:
-        return HTMLResponse(content=f.read())
+    # --- THIS IS THE FIX ---
+    # Explicitly open the file with UTF-8 encoding to prevent the server crash,
+    # especially on Windows environments.
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Error: index.html not found.</h1>", status_code=404)
+
 
 @app.post("/identify-car")
 async def identify_car(image: UploadFile = File(...)):
