@@ -28,7 +28,7 @@ For each car you identify, you MUST use the following exact Markdown format, inc
 ### **[Make Model (Estimated Year Range)] ([Confidence %])**
 - **Location in Image:** [Clear, simple description, e.g., "The red SUV in the foreground"]
 - **BoundingBox:** [x_min, y_min, x_max, y_max]
-- **MSRP (usd price in the first without import duty taxes, then bdt with import duty 1 usd = 130bdt, when saying the bdt price dont use the $ logo):**
+- **Price (tell usd price in the first without import duty taxes, then bdt with import duty 1 usd = 130bdt, when saying the bdt price dont use the $ logo): tell price without taxes in usd then with taxes in bdt**
 - **Engine:** [e.g., 2.0L Turbocharged I4]
 - **Engine CC:** [e.g., 1998]
 - **Vehicle Type:** [ICE, EV, or Hybrid]
@@ -42,12 +42,11 @@ For each car you identify, you MUST use the following exact Markdown format, inc
 
 CRITICAL RULES:
 1.  **ORDERING:** You MUST list the cars starting with the one closest to the viewer and work your way backwards to the one furthest away. This is the highest priority rule.
-2.  **EXTREME TIGHT FIT:** The box MUST be the smallest possible rectangle that perfectly crops the vehicle's visible shape.
+2. label the cars inside a rectriangle, transparent.
 3.  **ONE CAR PER BOX:** Each box must contain only ONE car. Never group multiple cars in one box.
-4.  **EXCLUDE EVERYTHING ELSE:** The box must NOT contain pedestrians, cyclists, pylons, or other objects.
 5.  **COORDINATES:** Use normalized coordinates where [0.0, 0.0] is the top-left corner and [1.0, 1.0] is the bottom-right.
 6.  **UNIDENTIFIED CARS:** If you cannot identify a vehicle's make and model, format the title as `### **Unspecified Car (Reason)**`, but you MUST still provide a tight and accurate BoundingBox and estimate the other details if possible.
-7. only spot cars nothing else
+7. only spot cars, nothing else
 8. dont give info about unspecified ones
 
 """
