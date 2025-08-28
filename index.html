@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CarSpotter AI</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@800&family=Inter:wght@400;700&display=swap" rel="stylesheet">
@@ -58,29 +57,77 @@
         #upload-label p { margin: 0; font-size: 1.1em; color: var(--text-secondary-color); }
         #upload-label p strong { color: var(--primary-color); font-weight: 700; }
         #file-input { display: none; }
-        #results-area { display: grid; gap: 30px; margin-top: 30px; }
-        #image-preview-container img {
-            max-width: 450px;
+        
+        #results-area { margin-top: 30px; }
+        
+        #image-wrapper {
+            position: relative;
+            max-width: 100%;
+            margin: 0 auto 30px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        #image-wrapper img {
+            display: block;
             width: 100%;
             height: auto;
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
-            display: block;
-            margin: 0 auto;
         }
+        #bounding-box-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; 
+        }
+        .bounding-box {
+            position: absolute;
+            border: 2px solid var(--primary-color);
+            background-color: rgba(0, 191, 255, 0.2);
+            box-shadow: 0 0 10px var(--glow-color);
+            pointer-events: all; 
+            transition: background-color 0.2s ease;
+            border-radius: 4px;
+        }
+
+        /* --- FIX 3: IMPROVED LABEL PLACEMENT --- */
+        /* This places the label *inside* the top-left of the box,
+           making it more reliable and preventing it from appearing off-screen. */
+        .bounding-box .box-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: var(--primary-color);
+            color: var(--background-color);
+            padding: 2px 6px;
+            font-size: 0.8em;
+            font-weight: bold;
+            white-space: nowrap;
+            border-radius: 0 0 4px 0; /* Rounded corner for the bottom-right of the label */
+        }
+        .bounding-box.highlighted, .bounding-box:hover {
+            background-color: rgba(0, 191, 255, 0.4);
+        }
+        
+        #results-container { display: grid; gap: 20px; }
+
         details.car-card {
             background-color: var(--surface-color);
             border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 25px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        details.car-card.highlighted {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--glow-color);
         }
         details.car-card summary { cursor: pointer; list-style: none; }
         details.car-card summary::-webkit-details-marker { display: none; }
-        details.car-card summary h3 { display: inline-block; }
-        
-        .car-card h3 { font-family: 'Orbitron', sans-serif; font-size: 1.6em; color: var(--primary-color); margin: 0 0 15px 0; }
-        .car-card ul { list-style: disc; padding-left: 20px; margin-top: 15px; }
-        .car-card li { line-height: 1.7; margin-bottom: 5px; }
+        details.car-card summary h3 { display: inline-block; font-family: 'Orbitron', sans-serif; font-size: 1.6em; color: var(--primary-color); margin: 0 0 15px 0;}
+        details.car-card ul { list-style: none; padding-left: 0; margin-top: 15px; }
+        details.car-card li { line-height: 1.7; margin-bottom: 5px; }
         
         #loader { text-align: center; padding: 20px 0; margin: 0; }
         .loader-spinner {
@@ -109,22 +156,8 @@
             color: var(--text-secondary-color);
         }
         footer p { line-height: 1.6; margin-bottom: 1em; }
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            margin-top: 15px;
-        }
-        .email-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--surface-color);
-            padding: 8px 15px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
+        .footer-links { display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 15px; }
+        .email-container { display: flex; align-items: center; gap: 10px; background: var(--surface-color); padding: 8px 15px; border-radius: 10px; border: 1px solid var(--border-color); }
         #email-text { font-family: monospace; font-size: 1.1em; }
         #copy-email-btn { background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; color: var(--text-secondary-color); }
         #copy-email-btn:hover { color: var(--primary-color); }
@@ -147,7 +180,7 @@
             <div id="upload-container">
                 <input type="file" id="file-input" accept="image/*">
                 <label for="file-input" id="upload-label">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                     <p><strong>Click to upload</strong>, drag & drop, or paste an image</p>
                 </label>
             </div>
@@ -158,7 +191,10 @@
             </div>
 
             <div id="results-area" class="hidden">
-                <div id="image-preview-container"></div>
+                <div id="image-wrapper">
+                    <img id="image-preview" src="" alt="Uploaded Car Image Preview">
+                    <div id="bounding-box-overlay"></div>
+                </div>
                 <div id="results-container"></div>
             </div>
         </main>
@@ -186,8 +222,9 @@
         const fileInput = document.getElementById('file-input');
         const loader = document.getElementById('loader');
         const resultsArea = document.getElementById('results-area');
-        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const imagePreview = document.getElementById('image-preview');
         const resultsContainer = document.getElementById('results-container');
+        const boxOverlay = document.getElementById('bounding-box-overlay');
         const copyEmailBtn = document.getElementById('copy-email-btn');
         const copyIcon = document.getElementById('copy-icon');
         const checkIcon = document.getElementById('check-icon');
@@ -227,66 +264,135 @@
             }
         }
 
+        function clearResults() {
+            resultsArea.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            boxOverlay.innerHTML = '';
+            imagePreview.src = '';
+        }
+        
+        function addInteractivity() {
+            const boxes = document.querySelectorAll('.bounding-box');
+            const cards = document.querySelectorAll('.car-card');
+
+            boxes.forEach(box => {
+                const card = document.getElementById(box.dataset.cardId);
+                box.addEventListener('mouseenter', () => {
+                    card.classList.add('highlighted');
+                    box.classList.add('highlighted');
+                });
+                box.addEventListener('mouseleave', () => {
+                    card.classList.remove('highlighted');
+                    box.classList.remove('highlighted');
+                });
+            });
+
+            cards.forEach(card => {
+                const box = document.getElementById(card.dataset.boxId);
+                card.addEventListener('mouseenter', () => {
+                    box.classList.add('highlighted');
+                    card.classList.add('highlighted');
+                });
+                card.addEventListener('mouseleave', () => {
+                    box.classList.remove('highlighted');
+                    card.classList.remove('highlighted');
+                });
+            });
+        }
+
+
         async function handleFile(file) {
             if (!file || isProcessing) return;
             isProcessing = true;
             uploadContainer.classList.add('disabled');
-            
-            // --- THIS IS THE FIX ---
-            // Immediately clear previous results and image to ensure a clean slate.
-            resultsArea.classList.add('hidden');
-            imagePreviewContainer.innerHTML = '';
-            resultsContainer.innerHTML = '';
-            
+            clearResults();
             loader.classList.remove('hidden');
-            
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(file);
-            img.alt = "Uploaded Car Image Preview";
-            imagePreviewContainer.appendChild(img);
             
             const formData = new FormData();
             formData.append('image', file);
             
-            try {
-                const response = await fetch('/identify-car', { method: 'POST', body: formData });
-                if (!response.ok) throw new Error((await response.json()).detail || 'Server error');
-                const data = await response.json();
-                
-                const parsedHTML = marked.parse(data.identification);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = parsedHTML;
-                
-                let cardHTML = '';
-                const elements = Array.from(tempDiv.children);
-                for (let i = 0; i < elements.length; i++) {
-                    if (elements[i].tagName === 'H3') {
-                        const titleElement = elements[i];
-                        const listElement = (i + 1 < elements.length && elements[i + 1].tagName === 'UL') ? elements[i + 1] : null;
+            imagePreview.src = URL.createObjectURL(file);
+            
+            imagePreview.onload = async () => {
+                try {
+                    const response = await fetch('/identify-car', { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error((await response.json()).detail || 'Server error');
+                    const data = await response.json();
+                    
+                    const carBlocks = data.identification.split('### ').filter(b => b.trim() !== '' && !b.startsWith('<example>'));
+                    let cardsHTML = '';
+                    let boxesHTML = '';
+
+                    carBlocks.forEach((block, index) => {
+                        const carId = `car-${index}`;
+                        const boxId = `box-${index}`;
                         
-                        const isUnspecified = titleElement.textContent.includes('Unspecified');
+                        const lines = block.split('\n').filter(l => l.trim() !== '' && !l.includes('</example>'));
+                        const title = lines[0]?.trim()?.replace(/\*\*/g, '') || 'Unnamed Car';
+                        const isUnspecified = title.toLowerCase().includes('unspecified');
+
+                        let boundingBox = null;
+                        const boxLine = lines.find(line => line.includes('- **BoundingBox:**'));
+                        if (boxLine) {
+                            try {
+                                const coordsStr = boxLine.substring(boxLine.indexOf('[') + 1, boxLine.indexOf(']'));
+                                boundingBox = JSON.parse(`[${coordsStr}]`);
+                            } catch (e) {
+                                console.error("Could not parse bounding box:", boxLine);
+                            }
+                        }
+
+                        if (boundingBox && boundingBox.length === 4) {
+                            const [x_min, y_min, x_max, y_max] = boundingBox;
+                            const boxLeft = x_min * 100;
+                            const boxTop = y_min * 100;
+                            const boxWidth = (x_max - x_min) * 100;
+                            const boxHeight = (y_max - y_min) * 100;
+                            
+                            boxesHTML += `
+                                <div class="bounding-box" id="${boxId}" data-card-id="${carId}" style="left: ${boxLeft}%; top: ${boxTop}%; width: ${boxWidth}%; height: ${boxHeight}%;">
+                                    <div class="box-label">${title}</div>
+                                </div>
+                            `;
+                        }
                         
-                        cardHTML += `
-                            <details class="car-card" ${!isUnspecified ? 'open' : ''}>
-                                <summary>${titleElement.outerHTML}</summary>
-                                ${listElement ? listElement.outerHTML : ''}
+                        const detailsList = lines.slice(1)
+                                                 .filter(line => !line.includes('BoundingBox:'))
+                                                 .map(line => line.trim())
+                                                 .join('\n');
+                        
+                        cardsHTML += `
+                            <details class="car-card" id="${carId}" data-box-id="${boxId}" ${!isUnspecified ? 'open' : ''}>
+                                <summary><h3>${title}</h3></summary>
+                                <ul>
+                                    ${detailsList.replace(/- \*\*(.*?):\*\* (.*)/g, '<li><strong>$1:</strong> $2</li>')}
+                                </ul>
                             </details>
                         `;
+                    });
 
-                        if (listElement) i++;
-                    }
+                    resultsContainer.innerHTML = cardsHTML;
+                    boxOverlay.innerHTML = boxesHTML;
+                    addInteractivity(); 
+
+                } catch (error) {
+                    resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Identification Failed</h3><p>${error.message}</p></div>`;
+                    console.error('CarSpotter AI Error:', error);
+                } finally {
+                    loader.classList.add('hidden');
+                    resultsArea.classList.remove('hidden');
+                    isProcessing = false;
+                    uploadContainer.classList.remove('disabled');
                 }
-                resultsContainer.innerHTML = cardHTML;
-
-            } catch (error) {
-                resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Identification Failed</h3><p>${error.message}</p></div>`;
-                console.error('CarSpotter AI Error:', error);
-            } finally {
-                loader.classList.add('hidden');
-                resultsArea.classList.remove('hidden');
-                isProcessing = false;
-                uploadContainer.classList.remove('disabled');
-            }
+            };
+            
+            imagePreview.onerror = () => {
+                 resultsContainer.innerHTML = `<div class="car-card"><h3 style="color: var(--error-color);">Error</h3><p>Could not load the image file.</p></div>`;
+                 loader.classList.add('hidden');
+                 resultsArea.classList.remove('hidden');
+                 isProcessing = false;
+                 uploadContainer.classList.remove('disabled');
+            };
         }
     </script>
 </body>
